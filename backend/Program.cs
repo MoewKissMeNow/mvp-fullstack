@@ -1,22 +1,19 @@
+п»їusing Microsoft.EntityFrameworkCore;
+using backend.Data;
+
 var builder = WebApplication.CreateBuilder(args);
+
+var connectionString =
+    builder.Configuration.GetConnectionString("DefaultConnection");
+
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseSqlite(connectionString));
+
 var app = builder.Build();
-app.UseMiddleware<ExceptionHandlingMiddleware>();
 
-var welcome = app.Configuration["AppSettings:WelcomeMessage"];
-var version = app.Configuration["AppSettings:Version"];
+app.MapGet("/", () => "Expense Tracker РїСЂР°С†СЋС”!");
 
-app.Logger.LogInformation("Застосунок запущено. Середовище: {Env}", app.Environment.EnvironmentName);
-
-app.MapGet("/", () =>
-{
-    app.Logger.LogInformation("Опрацювання запиту до головного ендпоінта");
-    return $"{welcome} (версія {version})";
-});
-app.MapGet("/boom", () =>
-{
-    throw new Exception("Тестова помилка для перевірки Middleware");
-});
+app.MapGet("/expenses", async (AppDbContext db) =>
+    await db.Expenses.ToListAsync());
 
 app.Run();
-
-
